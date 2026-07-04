@@ -438,10 +438,12 @@
         🛠️ Servi<span>Loc</span>
     </a>
     
-    <div class="navbar-search">
+  <div class="navbar-search">
+    <form action="{{ route('search') }}" method="GET" style="display: flex; width: 100%; position: relative;">
         <span class="search-icon">🔍</span>
-        <input type="text" placeholder="Search services, providers..." id="globalSearch">
-    </div>
+        <input type="text" name="q" placeholder="Search services, providers..." id="globalSearch" style="width: 100%; padding: 10px 16px 10px 44px; border: 2px solid #e8ecf1; border-radius: 12px; font-size: 14px; background: #f8f9fa; outline: none;">
+    </form>
+</div>
     
     <div class="navbar-actions">
         <button class="notification-btn">
@@ -528,20 +530,19 @@
             <span class="nav-icon">💬</span>
             Offers Received
             <span class="nav-badge">{{ $user ? $user->serviceRequests()->with('offers')->get()->sum(function($r) { return $r->offers->count(); }) : 0 }}</span>
-        </a>
-        <a href="#" class="nav-item">
-            <span class="nav-icon">⭐</span>
-            My Reviews
-        </a>
+       <a href="{{ route('customer.reviews') }}" class="nav-item">
+    <span class="nav-icon">⭐</span>
+    My Reviews
+</a>
     @endif
     
     <div style="margin-top: 24px; border-top: 1px solid #e8ecf1; padding-top: 16px;">
         <div class="sidebar-label">Account</div>
         
-        <a href="{{ route('profile.edit') }}" class="nav-item">
-            <span class="nav-icon">👤</span>
-            Profile Settings
-        </a>
+     <a href="{{ route('profile.show') }}" class="nav-item">
+    <span class="nav-icon">👤</span>
+    My Profile
+</a>
         
         <a href="{{ route('logout') }}" class="nav-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
             <span class="nav-icon">🚪</span>

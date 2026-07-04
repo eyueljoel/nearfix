@@ -35,12 +35,15 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Profile Routes
+// ============================================
+// PROFILE ROUTES
+// ============================================
+
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // ============================================
@@ -109,3 +112,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reviews/create/{requestId}', 'App\Http\Controllers\ReviewController@create')->name('reviews.create');
     Route::post('/reviews/store/{requestId}', 'App\Http\Controllers\ReviewController@store')->name('reviews.store');
 });
+
+
+// ============================================
+// MY REVIEWS ROUTE
+// ============================================
+
+Route::get('/customer/reviews', function() {
+    return view('customer.reviews.index');
+})->name('customer.reviews')->middleware('auth');
+
+
+// ============================================
+// SEARCH ROUTE
+// ============================================
+
+Route::get('/search', [App\Http\Controllers\SearchController::class, 'search'])->name('search');
