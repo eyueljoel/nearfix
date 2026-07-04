@@ -17,7 +17,8 @@ class ServiceRequest extends Model
         'budget',
         'location',
         'status',
-        'scheduled_date'
+        'scheduled_date',
+        'assigned_provider_id'
     ];
 
     public function user()
@@ -38,5 +39,10 @@ class ServiceRequest extends Model
     public function review()
     {
         return $this->hasOne(Review::class);
+    }
+
+    public function assignedProvider()
+    {
+        return $this->belongsTo(User::class, 'assigned_provider_id');
     }
 }

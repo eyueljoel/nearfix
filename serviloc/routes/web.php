@@ -15,9 +15,18 @@ use Illuminate\Support\Facades\Route;
 // ============================================
 
 Route::get('/', function () {
-    return redirect()->route('customer.dashboard');
+    if (auth()->check()) {
+        $user = auth()->user();
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->role === 'provider') {
+            return redirect()->route('provider.dashboard');
+        } else {
+            return redirect()->route('customer.dashboard');
+        }
+    }
+    return redirect()->route('login');
 });
-
 // ============================================
 // AUTH ROUTES (Breeze)
 // ============================================
@@ -55,3 +64,48 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
 // ============================================
 
 require __DIR__.'/auth.php';
+
+// ============================================
+// PROVIDER ROUTES
+// ============================================
+
+Route::middleware(['auth', 'verified'])->prefix('provider')->name('provider.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Provider\DashboardController::class, 'index'])->name('dashboard');
+});
+
+// ============================================
+// ADMIN ROUTES
+// ============================================
+
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+});
+// ============================================
+// OFFER ROUTES
+// ============================================
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Provider: Create offer
+    Route::get('/offers/create/{requestId}', [App\Http\Controllers\OfferController::class, 'create'])->name('offers.create');
+    Route::post('/offers/store/{requestId}', [App\Http\Controllers\OfferController::class, 'store'])->name('offers.store');
+    
+    // Customer: View offers
+    Route::get('/offers', [App\Http\Controllers\OfferController::class, 'index'])->name('offers.index');
+    
+    // Customer: Accept/Reject offer
+    Route::put('/offers/accept/{offerId}', [App\Http\Controllers\OfferController::class, 'accept'])->name('offers.accept');
+    Route::put('/offers/reject/{offerId}', [App\Http\Controllers\OfferController::class, 'reject'])->name('offers.reject');
+});
+
+// ============================================
+// REVIEW ROUTES
+// ============================================
+
+// ============================================
+// REVIEW ROUTES
+// ============================================
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/reviews/create/{requestId}', 'App\Http\Controllers\ReviewController@create')->name('reviews.create');
+    Route::post('/reviews/store/{requestId}', 'App\Http\Controllers\ReviewController@store')->name('reviews.store');
+});

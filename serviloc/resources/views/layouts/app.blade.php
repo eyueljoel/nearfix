@@ -464,50 +464,95 @@
 <!-- ===== APP LAYOUT ===== -->
 <div class="app-layout">
     
-    <!-- ===== SIDEBAR ===== -->
-    <aside class="sidebar">
-        <div class="sidebar-label">Main Menu</div>
+ <!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+    <div class="sidebar-label">Main Menu</div>
+    
+    @php $user = auth()->user(); @endphp
+    
+    @if($user && $user->role === 'admin')
+        <!-- ===== ADMIN MENU ===== -->
+        <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+            <span class="nav-icon">📊</span>
+            Dashboard
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">👤</span>
+            Users
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">📝</span>
+            All Requests
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">💬</span>
+            All Offers
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">📂</span>
+            Categories
+        </a>
         
+    @elseif($user && $user->role === 'provider')
+        <!-- ===== PROVIDER MENU ===== -->
+        <a href="{{ route('provider.dashboard') }}" class="nav-item {{ request()->routeIs('provider.dashboard') ? 'active' : '' }}">
+            <span class="nav-icon">📊</span>
+            Dashboard
+        </a>
+        <a href="{{ route('provider.dashboard') }}" class="nav-item">
+            <span class="nav-icon">📋</span>
+            Available Requests
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">💬</span>
+            My Offers
+            <span class="nav-badge">{{ $user->offers()->count() }}</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">✅</span>
+            Accepted Jobs
+        </a>
+        
+    @else
+        <!-- ===== CUSTOMER MENU ===== -->
         <a href="{{ route('customer.dashboard') }}" class="nav-item {{ request()->routeIs('customer.dashboard') ? 'active' : '' }}">
             <span class="nav-icon">📊</span>
             Dashboard
         </a>
-        
         <a href="{{ route('customer.requests') }}" class="nav-item {{ request()->routeIs('customer.requests*') ? 'active' : '' }}">
             <span class="nav-icon">📝</span>
             My Requests
-            <span class="nav-badge">{{ auth()->user() ? auth()->user()->serviceRequests()->count() : 0 }}</span>
+            <span class="nav-badge">{{ $user ? $user->serviceRequests()->count() : 0 }}</span>
         </a>
-        
-        <a href="{{ route('customer.requests') }}" class="nav-item">
+        <a href="{{ route('offers.index') }}" class="nav-item {{ request()->routeIs('offers*') ? 'active' : '' }}">
             <span class="nav-icon">💬</span>
             Offers Received
-            <span class="nav-badge">5</span>
+            <span class="nav-badge">{{ $user ? $user->serviceRequests()->with('offers')->get()->sum(function($r) { return $r->offers->count(); }) : 0 }}</span>
         </a>
-        
-        <a href="{{ route('customer.requests') }}" class="nav-item">
+        <a href="#" class="nav-item">
             <span class="nav-icon">⭐</span>
             My Reviews
         </a>
+    @endif
+    
+    <div style="margin-top: 24px; border-top: 1px solid #e8ecf1; padding-top: 16px;">
+        <div class="sidebar-label">Account</div>
         
-        <div style="margin-top: 24px; border-top: 1px solid #e8ecf1; padding-top: 16px;">
-            <div class="sidebar-label">Account</div>
-            
-            <a href="{{ route('profile.edit') }}" class="nav-item">
-                <span class="nav-icon">👤</span>
-                Profile Settings
-            </a>
-            
-            <a href="{{ route('logout') }}" class="nav-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                <span class="nav-icon">🚪</span>
-                Logout
-            </a>
-            
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                @csrf
-            </form>
-        </div>
-    </aside>
+        <a href="{{ route('profile.edit') }}" class="nav-item">
+            <span class="nav-icon">👤</span>
+            Profile Settings
+        </a>
+        
+        <a href="{{ route('logout') }}" class="nav-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <span class="nav-icon">🚪</span>
+            Logout
+        </a>
+        
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
+    </div>
+</aside>
     
     <!-- ===== MAIN CONTENT ===== -->
     <main class="main-content">

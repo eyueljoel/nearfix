@@ -2,48 +2,31 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-    'role',
-    'phone',
-    'address',
-    'profile_photo',
-    'bio',
-    'is_verified'
-];
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
+        'name',
+        'email',
+        'password',
+        'role',
+        'phone',
+        'address',
+        'profile_photo',
+        'bio',
+        'is_verified'
+    ];
+
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -51,38 +34,44 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-public function isCustomer()
-{
-    return $this->role === 'customer';
-}
 
-public function isProvider()
-{
-    return $this->role === 'provider';
-}
+    public function isCustomer()
+    {
+        return $this->role === 'customer';
+    }
 
-public function isAdmin()
-{
-    return $this->role === 'admin';
-}
+    public function isProvider()
+    {
+        return $this->role === 'provider';
+    }
 
-public function serviceRequests()
-{
-    return $this->hasMany(ServiceRequest::class);
-}
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
 
-public function offers()
-{
-    return $this->hasMany(Offer::class, 'provider_id');
-}
+    public function serviceRequests()
+    {
+        return $this->hasMany(ServiceRequest::class);
+    }
 
-public function reviewsGiven()
-{
-    return $this->hasMany(Review::class, 'reviewer_id');
-}
+    public function offers()
+    {
+        return $this->hasMany(Offer::class, 'provider_id');
+    }
 
-public function reviewsReceived()
-{
-    return $this->hasMany(Review::class, 'reviewee_id');
-}
+    public function reviewsGiven()
+    {
+        return $this->hasMany(Review::class, 'reviewer_id');
+    }
+
+    public function reviewsReceived()
+    {
+        return $this->hasMany(Review::class, 'reviewee_id');
+    }
+
+    public function assignedRequests()
+    {
+        return $this->hasMany(ServiceRequest::class, 'assigned_provider_id');
+    }
 }

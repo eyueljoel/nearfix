@@ -47,41 +47,44 @@
         <a href="{{ route('customer.requests') }}" class="view-all">View All →</a>
     </div>
     
-    @if($recentRequests->count() > 0)
-        @foreach($recentRequests as $request)
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f0f2f5;">
-                <div>
-                    <div style="font-weight: 600; color: #1a1a2e;">{{ $request->title }}</div>
-                    <div style="font-size: 13px; color: #8895aa;">
-                        {{ $request->category->name }} • {{ $request->location }}
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="badge badge-{{ $request->status }}">
-                        {{ ucfirst($request->status) }}
-                    </span>
-                    <span style="font-weight: 600; color: #1a1a2e;">
-                        ETB {{ number_format($request->budget, 2) }}
-                    </span>
+  @if($recentRequests->count() > 0)
+    @foreach($recentRequests as $request)
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f0f2f5;">
+            <div>
+                <div style="font-weight: 600; color: #1a1a2e;">{{ $request->title }}</div>
+                <div style="font-size: 13px; color: #8895aa;">
+                    {{ $request->category->name }} • {{ $request->location }}
                 </div>
             </div>
-        @endforeach
-    @else
-        <div style="text-align: center; padding: 40px 0; color: #8895aa;">
-            <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
-            <p>You haven't posted any requests yet.</p>
-            <a href="{{ route('customer.requests.create') }}" style="color: #e94560; font-weight: 600; text-decoration: none;">
-                Post your first request →
-            </a>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="badge badge-{{ $request->status }}">
+                    {{ ucfirst($request->status) }}
+                </span>
+                <span style="font-weight: 600; color: #1a1a2e;">
+                    ETB {{ number_format($request->budget, 2) }}
+             @if($request->status === 'completed')
+    <a href="/reviews/create/{{ $request->id }}" style="background: #ffc107; color: #1a1a2e; padding: 4px 14px; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 600; display: inline-block;">
+        ⭐ Review
+    </a>
+@endif
+            </div>
         </div>
-    @endif
-</div>
+    @endforeach
+@else
+    <div style="text-align: center; padding: 40px 0; color: #8895aa;">
+        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+        <p>You haven't posted any requests yet.</p>
+        <a href="{{ route('customer.requests.create') }}" style="color: #e94560; font-weight: 600; text-decoration: none;">
+            Post your first request →
+        </a>
+    </div>
+@endif
 
 <!-- Recent Offers -->
 <div class="content-card">
     <div class="card-header">
         <h3>💬 Recent Offers</h3>
-        <a href="{{ route('customer.requests') }}" class="view-all">View All →</a>
+        <a href="{{ route('offers.index') }}" class="view-all">View All →</a>
     </div>
     
     @if($recentOffers->count() > 0)
