@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -25,27 +24,42 @@ class RegisteredUserController extends Controller
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role'     => ['required', 'in:customer,provider'],
+            'phone'    => ['nullable', 'string', 'max:30'],
+            'address'  => ['nullable', 'string', 'max:255'],
+            'bio'      => ['nullable', 'string', 'max:500'],
+            'terms'    => ['accepted'],
+        ], [
+            'terms.accepted' => 'You must agree to the Terms of Service to create an account.',
+            'role.in'        => 'Please select a valid account type.',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
+            'role'     => $request->role,
+            'phone'    => $request->phone,
+            'address'  => $request->address,
+            'bio'      => $request->role === 'provider' ? $request->bio : null,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // Redirect based on role
+        return match($user->role) {
+            'admin'    => redirect()->route('admin.dashboard'),
+            'provider' => redirect()->route('provider.dashboard'),
+            default    => redirect()->route('customer.dashboard'),
+        };
     }
 }

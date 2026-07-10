@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'My Requests')
+@section('title', 'My Service Requests')
 
 @section('content')
 <div class="page-header">
     <div>
         <h1>📝 My Service Requests</h1>
-        <p>View and manage all your service requests</p>
+        <p>Total: {{ $requests->count() }} requests</p>
     </div>
     <a href="{{ route('customer.requests.create') }}" class="btn-primary">
         ➕ Post New Request
@@ -20,35 +20,54 @@
 @endif
 
 @if($requests->count() > 0)
-    <div class="content-card">
-        @foreach($requests as $request)
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f0f2f5;">
-                <div>
-                    <div style="font-weight: 600; font-size: 16px; color: #1a1a2e;">
-                        <a href="{{ route('customer.requests.show', $request->id) }}" style="color: #1a1a2e; text-decoration: none;">
-                            {{ $request->title }}
-                        </a>
-                    </div>
-                    <div style="font-size: 14px; color: #8895aa; margin-top: 4px;">
-                        {{ $request->category->name }} • {{ $request->location }}
-                    </div>
-                    <div style="font-size: 13px; color: #8895aa; margin-top: 4px;">
-                        Posted: {{ $request->created_at->diffForHumans() }}
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="badge badge-{{ $request->status }}">
-                        {{ ucfirst($request->status) }}
-                    </span>
-                    <span style="font-weight: 700; color: #1a1a2e; font-size: 16px;">
-                        ETB {{ number_format($request->budget, 2) }}
-                    </span>
-                    <a href="{{ route('customer.requests.show', $request->id) }}" style="color: #e94560; text-decoration: none; font-weight: 600;">
-                        View →
-                    </a>
-                </div>
-            </div>
-        @endforeach
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200">
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Request Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Budget</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Offers</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @foreach($requests as $request)
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                <a href="{{ route('customer.requests.show', $request->id) }}" class="text-blue-600 hover:text-blue-800">
+                                    {{ $request->title }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $request->category->name }}</td>
+                            <td class="px-6 py-4 text-sm font-semibold text-blue-600">ETB {{ number_format($request->budget, 2) }}</td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full
+                                    {{ $request->status === 'open' ? 'bg-blue-100 text-blue-700' : '' }}
+                                    {{ $request->status === 'assigned' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                    {{ $request->status === 'completed' ? 'bg-green-100 text-green-700' : '' }}
+                                    {{ $request->status === 'cancelled' ? 'bg-red-100 text-red-700' : '' }}
+                                ">{{ ucfirst($request->status) }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">
+                                    {{ $request->offers->count() }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $request->created_at->format('M d, Y') }}</td>
+                            <td class="px-6 py-4 text-sm">
+                                <a href="{{ route('customer.requests.show', $request->id) }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 @else
     <div class="content-card" style="text-align: center; padding: 60px 20px;">

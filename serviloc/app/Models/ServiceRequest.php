@@ -45,4 +45,14 @@ class ServiceRequest extends Model
     {
         return $this->belongsTo(User::class, 'assigned_provider_id');
     }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
 }

@@ -57,7 +57,7 @@ class OfferController extends Controller
         }
         
         // Create offer
-        Offer::create([
+        $offer = Offer::create([
             'service_request_id' => $requestId,
             'provider_id' => Auth::id(),
             'price' => $validated['price'],
@@ -65,20 +65,36 @@ class OfferController extends Controller
             'status' => 'pending'
         ]);
         
+        // Notify the customer
+        $serviceRequest->user->notify(new \App\Notifications\OfferReceived($offer));
+        
         return redirect()->route('provider.dashboard')
             ->with('success', 'Offer sent successfully!');
     }
 
     // Customer: View all offers on their requests
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $requestIds = $user->serviceRequests()->pluck('id');
         
-        $offers = Offer::whereIn('service_request_id', $requestIds)
-            ->with(['serviceRequest', 'provider'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Offer::whereIn('service_request_id', $requestIds)
+            ->with(['serviceRequest', 'provider']);
+        
+        // Filter by status
+        if ($request->get('status')) {
+            $query->where('status', $request->get('status'));
+        }
+        
+        // Sort
+        $sortBy = $request->get('sort', 'latest');
+        if ($sortBy === 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest();
+        }
+        
+        $offers = $query->paginate(15);
         
         return view('customer.offers.index', compact('offers'));
     }
@@ -107,11 +123,22 @@ class OfferController extends Controller
             'assigned_provider_id' => $offer->provider_id
         ]);
         
-        // Reject all other offers for this request
-        Offer::where('service_request_id', $offer->service_request_id)
+        // Reject all other offers for this request and notify those providers
+        $rejected = Offer::where('service_request_id', $offer->service_request_id)
             ->where('id', '!=', $offer->id)
-            ->update(['status' => 'rejected']);
-        
+            ->where('status', 'pending')
+            ->with('provider')
+            ->get();
+
+        foreach ($rejected as $rej) {
+            $rej->update(['status' => 'rejected']);
+            $rej->provider->notify(new \App\Notifications\OfferStatusChanged($rej));
+        }
+
+        // Notify the accepted provider
+        $offer->load('provider', 'serviceRequest');
+        $offer->provider->notify(new \App\Notifications\OfferStatusChanged($offer));
+
         return back()->with('success', 'Offer accepted! Provider has been notified.');
     }
 
@@ -131,6 +158,10 @@ class OfferController extends Controller
         }
         
         $offer->update(['status' => 'rejected']);
+        
+        // Notify provider
+        $offer->load('provider', 'serviceRequest');
+        $offer->provider->notify(new \App\Notifications\OfferStatusChanged($offer));
         
         return back()->with('success', 'Offer rejected.');
     }

@@ -84,4 +84,56 @@ class DashboardController extends Controller
         $request = auth()->user()->serviceRequests()->with(['category', 'offers.provider'])->findOrFail($id);
         return view('customer.requests.show', compact('request'));
     }
+
+    public function offers(Request $request)
+    {
+        $user = auth()->user();
+        $requestIds = $user->serviceRequests()->pluck('id');
+        
+        $query = Offer::whereIn('service_request_id', $requestIds)
+            ->with(['serviceRequest', 'provider']);
+        
+        // Filter by status
+        if ($request->get('status')) {
+            $query->where('status', $request->get('status'));
+        }
+        
+        // Sort
+        $sortBy = $request->get('sort', 'latest');
+        if ($sortBy === 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest();
+        }
+        
+        $offers = $query->paginate(15);
+        
+        return view('customer.offers.index', compact('offers'));
+    }
+
+    public function reviews(Request $request)
+    {
+        $user = auth()->user();
+        
+        // Get reviews given by this customer
+        $query = Review::where('reviewer_id', $user->id)
+            ->with(['serviceRequest', 'reviewee']);
+        
+        // Filter by rating
+        if ($request->get('rating')) {
+            $query->where('rating', $request->get('rating'));
+        }
+        
+        // Sort
+        $sortBy = $request->get('sort', 'latest');
+        if ($sortBy === 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest();
+        }
+        
+        $reviews = $query->paginate(15);
+        
+        return view('customer.reviews.index', compact('reviews'));
+    }
 }

@@ -74,4 +74,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(ServiceRequest::class, 'assigned_provider_id');
     }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'recipient_id');
+    }
+
+    public function unreadMessageCount(): int
+    {
+        return Message::unreadCountForUser($this);
+    }
+
+    public function portfolioItems()
+    {
+        return $this->hasMany(PortfolioItem::class, 'provider_id');
+    }
 }
