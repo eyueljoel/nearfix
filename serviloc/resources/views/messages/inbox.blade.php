@@ -1,76 +1,71 @@
 @extends('layouts.app')
-
 @section('title', 'Messages')
 
 @section('content')
-<div class="page-header">
-    <div>
-        <h1>💬 Messages</h1>
-        <p>Your conversations with customers and providers</p>
-    </div>
-</div>
+<style>
+    :root{--blue:#0ea5e9;--blue-dk:#2563eb;--blue-lt:#eff6ff;--white:#fff;--bg:#f8fafc;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--green:#059669;--red:#dc2626;--r:14px;}
+    .pg-hd{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.3px;margin-bottom:20px;}
+    .inbox-list{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+    .conv-row{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:background 0.15s;}
+    .conv-row:last-child{border-bottom:none;}
+    .conv-row:hover{background:var(--bg);}
+    .conv-row.unread{background:var(--blue-lt);}
+    .conv-row.unread:hover{background:#dbeafe;}
+    .c-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:white;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .c-body{flex:1;min-width:0;}
+    .c-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+    .c-service{font-size:12px;color:var(--blue-dk);font-weight:500;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .c-preview{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .unread .c-preview{color:var(--text);font-weight:500;}
+    .c-right{text-align:right;flex-shrink:0;}
+    .c-time{font-size:12px;color:var(--muted);margin-bottom:6px;}
+    .unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;background:var(--blue);color:white;font-size:11px;font-weight:700;border-radius:10px;padding:0 6px;}
+    .read-tick{font-size:14px;color:var(--green);}
+    .empty-state{background:var(--white);border:1.5px dashed var(--border);border-radius:var(--r);padding:64px 24px;text-align:center;}
+    .empty-state h3{font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px;}
+    .empty-state p{font-size:13.5px;color:var(--muted);margin-bottom:20px;}
+    .btn-go{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--blue);color:white;border-radius:var(--r);font-size:13px;font-weight:600;text-decoration:none;transition:background 0.18s;}
+    .btn-go:hover{background:var(--blue-dk);}
+</style>
+
+<h1 class="pg-hd">Messages</h1>
 
 @if($conversations->count() > 0)
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <!-- Conversations List -->
-        <div class="divide-y divide-gray-200">
-            @foreach($conversations as $conversation)
-                <a href="{{ route('messages.show', $conversation->service_request_id) }}" 
-                   class="block hover:bg-gray-50 transition-colors duration-150 p-6">
-                    <div class="flex items-start justify-between gap-4">
-                        <!-- Left side: Avatar and message info -->
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
-                                    {{ strtoupper(substr($conversation->other_user->name, 0, 2)) }}
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-semibold text-gray-900">{{ $conversation->other_user->name }}</p>
-                                    <p class="text-sm text-gray-600">{{ $conversation->service_request->title }}</p>
-                                </div>
-                            </div>
-                            <p class="text-gray-600 text-sm truncate">{{ $conversation->last_message_preview }}</p>
-                        </div>
-
-                        <!-- Right side: Time and unread count -->
-                        <div class="text-right flex-shrink-0">
-                            <p class="text-xs text-gray-500 mb-2">{{ $conversation->last_message_at->diffForHumans() }}</p>
-                            @if($conversation->unread_count > 0)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-500 text-white">
-                                    {{ $conversation->unread_count }}
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs text-gray-400">
-                                    ✓
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-                </a>
-            @endforeach
-        </div>
-
-        <!-- Pagination -->
-        @if($conversations->hasPages())
-            <div class="border-t border-gray-200 px-6 py-4">
-                {{ $conversations->links() }}
-            </div>
-        @endif
+    <div class="inbox-list">
+        @foreach($conversations as $conv)
+            <a href="{{ route('messages.show', $conv->service_request_id) }}"
+               class="conv-row {{ $conv->unread_count > 0 ? 'unread' : '' }}">
+                <div class="c-av">{{ strtoupper(substr($conv->other_user->name, 0, 2)) }}</div>
+                <div class="c-body">
+                    <div class="c-name">{{ $conv->other_user->name }}</div>
+                    <div class="c-service">📋 {{ $conv->service_request->title }}</div>
+                    <div class="c-preview">{{ $conv->last_message_preview }}</div>
+                </div>
+                <div class="c-right">
+                    <div class="c-time">{{ $conv->last_message_at->diffForHumans(null, true, true) }}</div>
+                    @if($conv->unread_count > 0)
+                        <span class="unread-badge">{{ $conv->unread_count }}</span>
+                    @else
+                        <span class="read-tick">✓</span>
+                    @endif
+                </div>
+            </a>
+        @endforeach
     </div>
+
+    @if($conversations->hasPages())
+        <div style="margin-top:20px;">{{ $conversations->links() }}</div>
+    @endif
 @else
-    <!-- Empty State -->
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
-        <div class="text-6xl mb-4">💬</div>
-        <h3 class="text-2xl font-semibold text-gray-900 mb-2">No conversations yet</h3>
-        <p class="text-gray-600 mb-6">Start messaging with providers or customers about service requests.</p>
-        <div class="flex flex-wrap gap-4 justify-center">
-            <a href="{{ route('customer.requests') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                📋 View Requests
-            </a>
-            <a href="{{ route('offers.index') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                🤝 View Offers
-            </a>
-        </div>
+    <div class="empty-state">
+        <div style="width:56px;height:56px;background:var(--blue-lt);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;">💬</div>
+        <h3>No conversations yet</h3>
+        <p>Messages with customers and providers will appear here.</p>
+        @if(auth()->user()->role === 'customer')
+            <a href="{{ route('customer.requests') }}" class="btn-go">View My Requests</a>
+        @else
+            <a href="{{ route('provider.requests') }}" class="btn-go">Browse Requests</a>
+        @endif
     </div>
 @endif
 @endsection

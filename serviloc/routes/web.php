@@ -71,6 +71,10 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
     // Offers and Reviews
     Route::get('/offers', [DashboardController::class, 'offers'])->name('offers');
     Route::get('/reviews', [DashboardController::class, 'reviews'])->name('reviews');
+
+    // Nearby providers (location-based matching)
+    Route::get('/requests/{serviceRequest}/nearby-providers', [App\Http\Controllers\NearbyProvidersController::class, 'show'])->name('requests.nearby');
+    Route::post('/requests/{serviceRequest}/contact-provider', [App\Http\Controllers\NearbyProvidersController::class, 'contact'])->name('requests.contact-provider');
 });
 
 // ============================================

@@ -1,194 +1,184 @@
 @extends('layouts.app')
-
-@section('title', 'Message with ' . $otherUser->name)
+@section('title', 'Chat with ' . $otherUser->name)
 
 @section('content')
-<div class="page-header">
-    <div>
-        <h1>💬 Message with {{ $otherUser->name }}</h1>
-        <p class="text-sm text-gray-500">{{ $serviceRequest->title }}</p>
-    </div>
-    <a href="{{ route('messages.inbox') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-        </svg>
-        Back to Messages
-    </a>
-</div>
+<style>
+    :root{--blue:#0ea5e9;--blue-dk:#2563eb;--blue-lt:#eff6ff;--white:#fff;--bg:#f8fafc;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--green:#059669;--green-lt:#ecfdf5;--yellow:#d97706;--yellow-lt:#fffbeb;--red:#dc2626;--r:14px;}
+    .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);text-decoration:none;margin-bottom:16px;transition:color 0.18s;}
+    .back-link:hover{color:var(--blue);}
+    .chat-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;}
+    /* Chat container */
+    .chat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+    /* Chat header */
+    .chat-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--bg);}
+    .ch-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ch-name{font-size:14.5px;font-weight:700;color:var(--text);}
+    .ch-service{font-size:12px;color:var(--muted);}
+    .st-badge{display:inline-flex;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;margin-left:auto;white-space:nowrap;}
+    .st-open{background:var(--blue-lt);color:var(--blue-dk);}
+    .st-assigned{background:var(--yellow-lt);color:var(--yellow);}
+    .st-in_progress{background:#fef3c7;color:#92400e;}
+    .st-completed{background:var(--green-lt);color:var(--green);}
+    .st-cancelled{background:#fef2f2;color:var(--red);}
+    /* Message thread */
+    .msg-thread{padding:20px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+    .msg-thread::-webkit-scrollbar{width:5px;}
+    .msg-thread::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .msg-wrap{display:flex;gap:10px;align-items:flex-end;}
+    .msg-wrap.mine{flex-direction:row-reverse;}
+    .msg-av{width:32px;height:32px;border-radius:50%;color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .msg-av.theirs{background:linear-gradient(135deg,#6366f1,#8b5cf6);}
+    .msg-av.mine{background:linear-gradient(135deg,var(--blue),var(--blue-dk));}
+    .msg-bubble{max-width:75%;}
+    .bubble-name{font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:3px;}
+    .mine .bubble-name{text-align:right;}
+    .bubble-body{padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.55;word-break:break-word;}
+    .theirs .bubble-body{background:var(--bg);color:var(--text);border-bottom-left-radius:4px;}
+    .mine .bubble-body{background:var(--blue);color:white;border-bottom-right-radius:4px;}
+    .bubble-time{font-size:11px;color:var(--muted);margin-top:3px;}
+    .mine .bubble-time{text-align:right;}
+    .read-tick{color:var(--green);font-size:11px;}
+    /* Empty */
+    .no-msgs{text-align:center;padding:40px;color:var(--muted);font-size:13.5px;}
+    /* Compose */
+    .compose{padding:16px 20px;border-top:1px solid var(--border);background:var(--bg);}
+    .compose textarea{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--white);resize:none;outline:none;transition:border-color 0.18s;box-sizing:border-box;min-height:72px;line-height:1.5;}
+    .compose textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,165,233,0.12);}
+    .compose-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+    .char-count{font-size:12px;color:var(--muted);}
+    .btn-send{padding:9px 22px;background:var(--blue);color:white;border:none;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:7px;}
+    .btn-send:hover:not(:disabled){background:var(--blue-dk);transform:translateY(-1px);}
+    .btn-send:disabled{background:#94a3b8;cursor:not-allowed;}
+    /* Sidebar */
+    .sidebar-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:14px;position:sticky;top:80px;}
+    .sc-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:12px;}
+    .sc-row{display:flex;flex-direction:column;gap:3px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+    .sc-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+    .sc-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+    .sc-val{font-size:13.5px;font-weight:600;color:var(--text);}
+    .sc-budget{font-size:16px;font-weight:800;color:var(--blue-dk);}
+    .btn-full{display:block;width:100%;padding:9px;text-align:center;background:var(--bg);color:var(--muted);border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;transition:all 0.18s;margin-top:14px;}
+    .btn-full:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt);}
+    @media(max-width:900px){.chat-layout{grid-template-columns:1fr;}.sidebar-card{position:static;}}
+</style>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Message Thread -->
-    <div class="lg:col-span-2">
-        <!-- Message Thread Container -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
-            <!-- Header with request info -->
-            <div class="pb-6 border-b border-gray-100 mb-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm text-gray-600">Service Request</p>
-                        <p class="font-semibold text-gray-900">{{ $serviceRequest->title }}</p>
-                    </div>
-                    <span class="inline-flex px-3 py-1 text-xs font-medium rounded-full
-                        {{ $serviceRequest->status === 'open' ? 'bg-blue-100 text-blue-700' : '' }}
-                        {{ $serviceRequest->status === 'assigned' ? 'bg-yellow-100 text-yellow-700' : '' }}
-                        {{ $serviceRequest->status === 'completed' ? 'bg-green-100 text-green-700' : '' }}
-                        {{ $serviceRequest->status === 'cancelled' ? 'bg-red-100 text-red-700' : '' }}
-                    ">{{ ucfirst($serviceRequest->status) }}</span>
+<a href="{{ route('messages.inbox') }}" class="back-link">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Inbox
+</a>
+
+<div class="chat-layout">
+    {{-- Chat --}}
+    <div>
+        <div class="chat-card">
+            {{-- Header --}}
+            <div class="chat-hd">
+                <div class="ch-av">{{ strtoupper(substr($otherUser->name,0,2)) }}</div>
+                <div>
+                    <div class="ch-name">{{ $otherUser->name }}</div>
+                    <div class="ch-service">{{ $serviceRequest->title }}</div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-xs text-gray-600">Budget</p>
-                        <p class="font-semibold text-gray-900">ETB {{ number_format($serviceRequest->budget, 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-600">Location</p>
-                        <p class="font-semibold text-gray-900">{{ $serviceRequest->location }}</p>
-                    </div>
-                </div>
+                <span class="st-badge st-{{ $serviceRequest->status }}">{{ ucfirst($serviceRequest->status) }}</span>
             </div>
 
-            <!-- Messages -->
-            <div class="space-y-6 mb-6" style="max-height: 600px; overflow-y: auto;">
-                @forelse($messages as $message)
-                    <div class="flex gap-4 {{ $message->sender_id === auth()->id() ? 'flex-row-reverse' : '' }}">
-                        <!-- Avatar -->
-                        <div class="flex-shrink-0">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br {{ $message->sender_id === auth()->id() ? 'from-blue-400 to-blue-600' : 'from-green-400 to-green-600' }} flex items-center justify-center text-white font-semibold text-sm">
-                                {{ strtoupper(substr($message->sender->name, 0, 2)) }}
-                            </div>
+            {{-- Messages --}}
+            <div class="msg-thread" id="msgThread">
+                @forelse($messages as $msg)
+                    @php $mine = $msg->sender_id === auth()->id(); @endphp
+                    <div class="msg-wrap {{ $mine ? 'mine' : 'theirs' }}">
+                        <div class="msg-av {{ $mine ? 'mine' : 'theirs' }}">
+                            {{ strtoupper(substr($msg->sender->name,0,2)) }}
                         </div>
-
-                        <!-- Message Bubble -->
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                <p class="font-semibold text-gray-900 text-sm">{{ $message->sender->name }}</p>
-                                <p class="text-xs text-gray-500">{{ $message->created_at->format('M d, g:i A') }}</p>
-                                @if($message->sender_id !== auth()->id() && $message->isReadBy(auth()->user()))
-                                    <p class="text-xs text-green-600 ml-auto">✓ Read</p>
+                        <div class="msg-bubble">
+                            <div class="bubble-name">{{ $msg->sender->name }}</div>
+                            <div class="bubble-body">{{ $msg->body }}</div>
+                            <div class="bubble-time">
+                                {{ $msg->created_at->format('M d, g:i A') }}
+                                @if($mine && $msg->isReadBy($otherUser))
+                                    <span class="read-tick">✓ Read</span>
                                 @endif
-                            </div>
-                            <div class="p-4 rounded-lg {{ $message->sender_id === auth()->id() ? 'bg-blue-100 text-gray-900' : 'bg-gray-100 text-gray-900' }}">
-                                <p class="text-sm break-words">{{ $message->body }}</p>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-12">
-                        <p class="text-gray-500">No messages yet. Start the conversation!</p>
-                    </div>
+                    <div class="no-msgs">No messages yet — start the conversation!</div>
                 @endforelse
             </div>
 
-            <!-- Pagination for messages (if many) -->
             @if($messages->hasPages())
-                <div class="border-t border-gray-200 pt-4">
+                <div style="padding:12px 20px;border-top:1px solid var(--border);">
                     {{ $messages->links() }}
                 </div>
             @endif
-        </div>
 
-        <!-- Message Form -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <form action="{{ route('messages.store') }}" method="POST">
-                @csrf
-                <input type="hidden" name="service_request_id" value="{{ $serviceRequest->id }}">
-                <input type="hidden" name="recipient_id" value="{{ $otherUser->id }}">
-
-                <div class="mb-4">
-                    <label for="body" class="block text-sm font-medium text-gray-900 mb-2">Your Message</label>
-                    <textarea 
-                        id="body"
-                        name="body"
-                        rows="4"
-                        placeholder="Type your message here..."
-                        class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all {{ $errors->has('body') ? 'border-red-500' : '' }}"
-                        required
-                    ></textarea>
-
-                    @if($errors->has('body'))
-                        <p class="text-red-600 text-sm mt-1">{{ $errors->first('body') }}</p>
-                    @endif
-
-                    <div class="flex items-center justify-between mt-2">
-                        <p class="text-xs text-gray-500">
-                            <span id="charCount">0</span> / 2000 characters
-                        </p>
-                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" id="sendBtn" disabled>
-                            Send Message
+            {{-- Compose --}}
+            <div class="compose">
+                <form action="{{ route('messages.store') }}" method="POST" id="msgForm">
+                    @csrf
+                    <input type="hidden" name="service_request_id" value="{{ $serviceRequest->id }}">
+                    <input type="hidden" name="recipient_id" value="{{ $otherUser->id }}">
+                    <textarea name="body" id="msgBody" placeholder="Type your message…" required
+                              oninput="updateCompose(this)"></textarea>
+                    @error('body')
+                        <div style="font-size:12px;color:var(--red);margin-top:4px;">⚠ {{ $message }}</div>
+                    @enderror
+                    <div class="compose-footer">
+                        <span class="char-count"><span id="charCount">0</span> / 2000</span>
+                        <button type="submit" class="btn-send" id="sendBtn" disabled>
+                            Send
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Sidebar: Request Details -->
-    <div class="lg:col-span-1">
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sticky top-24">
-            <h4 class="font-semibold text-gray-900 mb-4">Request Details</h4>
-
-            <div class="space-y-4">
-                <div>
-                    <p class="text-xs text-gray-600 uppercase tracking-wider">Category</p>
-                    <p class="font-medium text-gray-900">{{ $serviceRequest->category->name }}</p>
-                </div>
-
-                <div>
-                    <p class="text-xs text-gray-600 uppercase tracking-wider">Budget</p>
-                    <p class="font-semibold text-blue-600 text-lg">ETB {{ number_format($serviceRequest->budget, 2) }}</p>
-                </div>
-
-                <div>
-                    <p class="text-xs text-gray-600 uppercase tracking-wider">Status</p>
-                    <span class="inline-flex px-3 py-1 text-xs font-medium rounded-full
-                        {{ $serviceRequest->status === 'open' ? 'bg-blue-100 text-blue-700' : '' }}
-                        {{ $serviceRequest->status === 'assigned' ? 'bg-yellow-100 text-yellow-700' : '' }}
-                        {{ $serviceRequest->status === 'completed' ? 'bg-green-100 text-green-700' : '' }}
-                        {{ $serviceRequest->status === 'cancelled' ? 'bg-red-100 text-red-700' : '' }}
-                    ">{{ ucfirst($serviceRequest->status) }}</span>
-                </div>
-
-                @if($serviceRequest->scheduled_date)
-                    <div>
-                        <p class="text-xs text-gray-600 uppercase tracking-wider">Preferred Date</p>
-                        <p class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($serviceRequest->scheduled_date)->format('M d, Y') }}</p>
-                    </div>
-                @endif
-
-                <div class="pt-4 border-t border-gray-100">
-                    <a href="{{ route('customer.requests.show', $serviceRequest->id) }}" class="block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                        View Full Request
-                    </a>
-                </div>
+    {{-- Sidebar --}}
+    <div>
+        <div class="sidebar-card">
+            <div class="sc-title">Request Details</div>
+            <div class="sc-row">
+                <div class="sc-label">Service</div>
+                <div class="sc-val">{{ $serviceRequest->title }}</div>
             </div>
+            <div class="sc-row">
+                <div class="sc-label">Category</div>
+                <div class="sc-val">{{ $serviceRequest->category->name ?? '—' }}</div>
+            </div>
+            <div class="sc-row">
+                <div class="sc-label">Budget</div>
+                <div class="sc-budget">ETB {{ number_format($serviceRequest->budget,0) }}</div>
+            </div>
+            <div class="sc-row">
+                <div class="sc-label">Location</div>
+                <div class="sc-val">{{ $serviceRequest->location }}</div>
+            </div>
+            <div class="sc-row">
+                <div class="sc-label">Status</div>
+                <span class="st-badge st-{{ $serviceRequest->status }}">{{ ucfirst($serviceRequest->status) }}</span>
+            </div>
+            @if($serviceRequest->scheduled_date)
+            <div class="sc-row">
+                <div class="sc-label">Preferred Date</div>
+                <div class="sc-val">{{ \Carbon\Carbon::parse($serviceRequest->scheduled_date)->format('M d, Y') }}</div>
+            </div>
+            @endif
+            <a href="{{ route('customer.requests.show', $serviceRequest->id) }}" class="btn-full">View Full Request</a>
         </div>
     </div>
 </div>
 
-@if(session('success'))
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Scroll to bottom
-            const threadContainer = document.querySelector('[style*="max-height"]');
-            if (threadContainer) {
-                threadContainer.scrollTop = threadContainer.scrollHeight;
-            }
-        });
-    </script>
-@endif
-
 <script>
-    // Character counter
-    const textarea = document.getElementById('body');
-    const charCount = document.getElementById('charCount');
-    const sendBtn = document.getElementById('sendBtn');
+function updateCompose(el) {
+    document.getElementById('charCount').textContent = el.value.length;
+    document.getElementById('sendBtn').disabled = el.value.trim().length === 0;
+}
 
-    textarea.addEventListener('input', function() {
-        charCount.textContent = this.value.length;
-        sendBtn.disabled = this.value.trim().length === 0;
-    });
-
-    // Disable send button on load if empty
-    sendBtn.disabled = textarea.value.trim().length === 0;
+// Auto-scroll to latest message
+document.addEventListener('DOMContentLoaded', function() {
+    const thread = document.getElementById('msgThread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+});
 </script>
 @endsection

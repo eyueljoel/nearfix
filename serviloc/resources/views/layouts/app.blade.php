@@ -653,9 +653,9 @@
         <a href="{{ route('profile.edit') }}" class="nav-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
             <span class="nav-icon">👤</span> My Profile
         </a>
-        <form action="{{ route('logout') }}" method="POST" style="display:contents;">
+        <form action="{{ route('logout') }}" method="POST" style="margin:0;">
             @csrf
-            <button type="submit" class="nav-item">
+            <button type="submit" class="nav-item" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit;color:inherit;">
                 <span class="nav-icon">🚪</span> Sign Out
             </button>
         </form>
